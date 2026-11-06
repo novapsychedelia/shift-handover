@@ -2,63 +2,48 @@
 <html lang="ko" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\n  <meta name="theme-color" content="#0f172a">\n  <meta name="description" content="팀 인수인계 및 조치 현황 실시간 공유 웹앱">
-  <title>Shift Handover Dashboard</title>
-  <!-- Tailwind CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="WorkLog 팀 업무 기록 및 인수인계 실시간 공유 웹앱">
+  <title>WorkLog</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
     tailwind.config = {
       darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              500: '#0284c7',
-              600: '#0369a1',
-              700: '#075985',
-            }
-          }
-        }
-      }
+      theme: { extend: { colors: { brand: {
+        50: '#f0f9ff', 100: '#e0f2fe', 500: '#0284c7',
+        600: '#0369a1', 700: '#075985'
+      }}}}
     }
   </script>
   <style>
-    /* Touch target & mobile responsive tweaks */
     button, input, select, textarea, label {
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.05);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 9999px;
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,.2); border-radius: 9999px; }
+    .media-thumb { width: 92px; height: 92px; object-fit: cover; }
+    .media-preview-card { position: relative; flex: 0 0 auto; }
+    .media-remove {
+      position: absolute; top: 4px; right: 4px; width: 26px; height: 26px;
+      border-radius: 9999px; background: rgba(15,23,42,.88); color: white;
+      display: flex; align-items: center; justify-content: center;
     }
   </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen font-sans flex flex-col select-none">
-
-  <!-- Main Container -->
   <div id="app" class="max-w-4xl w-full mx-auto p-3 sm:p-6 flex-grow flex flex-col">
-    
-    <!-- Header -->
     <header class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white text-xl shadow-md">
-            <i class="fa-solid fa-clipboard-user"></i>
+            <i class="fa-solid fa-clipboard-list"></i>
           </div>
           <div>
-            <h1 class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight">Shift Handover Dashboard</h1>
+            <h1 class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight">WorkLog</h1>
             <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
               <span id="sync-indicator" class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
               <span id="sync-text">실시간 연결 설정 중...</span>
@@ -66,34 +51,27 @@
           </div>
         </div>
       </div>
-
       <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
         <button type="button" id="btn-qr" class="px-3.5 py-3 bg-slate-100 dark:bg-slate-700 active:bg-slate-200 dark:active:bg-slate-600 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 transition cursor-pointer min-h-[44px]">
-          <i class="fa-solid fa-qrcode"></i>
-          <span>QR 공유</span>
+          <i class="fa-solid fa-qrcode"></i><span>QR 공유</span>
         </button>
         <button type="button" id="btn-add-new" class="px-4 py-3 bg-brand-600 active:bg-brand-700 text-white text-sm font-bold rounded-xl flex items-center justify-center gap-2 shadow-sm transition cursor-pointer min-h-[44px]">
-          <i class="fa-solid fa-plus"></i>
-          <span>새 인수인계 작성</span>
+          <i class="fa-solid fa-plus"></i><span>새 인수인계 작성</span>
         </button>
       </div>
     </header>
 
-    <!-- Navigation Tabs -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-1.5 mb-4 flex gap-2">
       <button type="button" id="tab-pending" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer bg-brand-600 text-white shadow-sm min-h-[48px]">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <span>인수인계사항</span>
+        <i class="fa-solid fa-clock-rotate-left"></i><span>인수인계사항</span>
         <span id="badge-pending-count" class="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
       </button>
       <button type="button" id="tab-completed" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 min-h-[48px]">
-        <i class="fa-solid fa-circle-check"></i>
-        <span>조치완료사항</span>
+        <i class="fa-solid fa-circle-check"></i><span>조치완료사항</span>
         <span id="badge-completed-count" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
       </button>
     </div>
 
-    <!-- Filters & Search -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-3 mb-4 flex flex-col sm:flex-row gap-3">
       <div class="relative flex-grow">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -108,7 +86,6 @@
       </div>
     </div>
 
-    <!-- Handover Feed List -->
     <main class="flex-grow">
       <div id="handover-list" class="space-y-4">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-700">
@@ -117,16 +94,13 @@
         </div>
       </div>
     </main>
-
   </div>
 
-  <!-- Modal: Editor Form (Contains Delete Button ONLY inside) -->
   <div id="modal-editor" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 w-full max-w-xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
       <div class="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
         <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2" id="modal-title">
-          <i class="fa-solid fa-pen-to-square text-brand-500"></i>
-          <span>새 인수인계 작성</span>
+          <i class="fa-solid fa-pen-to-square text-brand-500"></i><span>새 인수인계 작성</span>
         </h3>
         <button type="button" id="btn-close-modal" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-2 text-2xl rounded-lg cursor-pointer">
           <i class="fa-solid fa-xmark"></i>
@@ -135,7 +109,6 @@
 
       <form id="handover-form" class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-grow">
         <input type="hidden" id="edit-doc-id">
-
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">근무 시간대 *</label>
@@ -155,20 +128,34 @@
           <textarea id="form-memo" rows="4" required placeholder="근무 중 발생 특이사항, 설비 상태, 전달사항 등을 입력하세요." class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-brand-500"></textarea>
         </div>
 
-        <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center gap-2">
-          <!-- Modal-isolated Delete Button -->
-          <button type="button" id="btn-modal-delete" class="px-4 py-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer min-h-[44px] hidden">
-            <i class="fa-solid fa-trash-can"></i>
-            <span>삭제</span>
-          </button>
-
-          <div class="flex gap-2 ml-auto">
-            <button type="button" id="btn-cancel-modal" class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl font-semibold transition cursor-pointer min-h-[44px]">
-              취소
+        <section class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-3">
+          <div>
+            <p class="text-sm font-bold text-slate-800 dark:text-slate-100"><i class="fa-solid fa-paperclip mr-1.5 text-brand-500"></i>사진 및 영상 첨부</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">사진 최대 5장 · 영상 1개 · 영상 길이 30초 이내</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">사진은 장당 8MB, 영상은 최대 25MB까지 지원합니다.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="btn-add-images" class="px-3 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg min-h-[44px]">
+              <i class="fa-regular fa-image mr-1"></i>사진 선택
             </button>
+            <button type="button" id="btn-add-video" class="px-3 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg min-h-[44px]">
+              <i class="fa-solid fa-video mr-1"></i>영상 선택
+            </button>
+            <input type="file" id="image-input" accept="image/*" multiple class="hidden">
+            <input type="file" id="video-input" accept="video/mp4,video/quicktime,video/*" class="hidden">
+          </div>
+          <div id="attachment-preview" class="flex flex-wrap gap-2"></div>
+          <p id="upload-status" class="text-xs text-slate-500 dark:text-slate-400" aria-live="polite"></p>
+        </section>
+
+        <div class="pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center gap-2">
+          <button type="button" id="btn-modal-delete" class="px-4 py-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer min-h-[44px] hidden">
+            <i class="fa-solid fa-trash-can"></i><span>삭제</span>
+          </button>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" id="btn-cancel-modal" class="px-4 py-3 text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-xl font-semibold transition cursor-pointer min-h-[44px]">취소</button>
             <button type="submit" id="btn-submit-form" class="px-5 py-3 text-sm text-white bg-brand-600 hover:bg-brand-700 active:bg-brand-800 font-bold rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer min-h-[44px]">
-              <i class="fa-solid fa-paper-plane"></i>
-              <span>저장</span>
+              <i class="fa-solid fa-paper-plane"></i><span>저장</span>
             </button>
           </div>
         </div>
@@ -176,64 +163,52 @@
     </div>
   </div>
 
-  <!-- QR Share Modal -->
   <div id="modal-qr" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 max-w-sm w-full text-center">
       <h3 class="font-bold text-slate-900 dark:text-white text-lg mb-2">QR 코드로 팀 공유</h3>
       <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">팀원들이 이 QR을 스캔하면 동기화된 웹앱에 즉시 접속합니다.</p>
-      
       <div class="bg-white p-4 rounded-xl border border-slate-200 inline-block mb-4">
         <img id="qr-code-img" src="" alt="QR Code" class="w-48 h-48 mx-auto">
       </div>
-
       <div class="flex gap-2">
         <button type="button" id="btn-copy-link" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl hover:bg-slate-200 transition cursor-pointer min-h-[44px]">
           <i class="fa-solid fa-copy mr-1"></i> 링크 복사
         </button>
-        <button type="button" id="btn-close-qr" class="flex-1 py-3 bg-brand-600 text-white text-xs font-bold rounded-xl hover:bg-brand-700 transition cursor-pointer min-h-[44px]">
-          닫기
-        </button>
+        <button type="button" id="btn-close-qr" class="flex-1 py-3 bg-brand-600 text-white text-xs font-bold rounded-xl hover:bg-brand-700 transition cursor-pointer min-h-[44px]">닫기</button>
       </div>
     </div>
   </div>
-
-  <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <!-- Firebase Integration Script -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, 
-      signInAnonymously, 
-      signInWithCustomToken, 
-      onAuthStateChanged 
+    import {
+      getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      doc, 
-      addDoc, 
-      updateDoc, 
-      deleteDoc, 
-      onSnapshot,
-      serverTimestamp 
+    import {
+      getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // Application state
     let currentTab = 'pending';
     let handoverLogs = [];
     let db = null;
     let auth = null;
     let currentUser = null;
 
-    // 고정된 Firestore 경로 이름입니다. 배포 후 변경하지 않는 것을 권장합니다.
     const appId = 'shift-handover-app';
+    const CLOUDINARY_CLOUD_NAME = 'worklog';
+    const CLOUDINARY_UPLOAD_PRESET = 'worklog_upload';
+    const MAX_IMAGES = 5;
+    const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+    const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
+    const MAX_VIDEO_SECONDS = 30;
 
-    // Firebase Console > 프로젝트 설정 > 내 앱 > SDK 설정에서 실제 값으로 교체하세요.
-    // 아래 값은 예시가 아닌 자리표시자이며, 교체하지 않으면 앱이 연결되지 않습니다.
+    let selectedFiles = [];
+    let existingAttachments = [];
+    let previewObjectUrls = [];
+
     const firebaseConfig = {
-      apiKey: "AIzaSyASjCDtchaPqZhnk1mAsmUkSUBQ9Ik3w6Y",
+      apiKey: "AIzaSyASjCDtchaPqZhnk1mAsmUkSUBQ9Ik3w6",
       authDomain: "proto-beta1.firebaseapp.com",
       projectId: "proto-beta1",
       storageBucket: "proto-beta1.firebasestorage.app",
@@ -251,7 +226,13 @@
       });
     }
 
-    // Toast notifications
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
     window.showToast = function(message, type = 'info') {
       const container = document.getElementById('toast-container');
       if (!container) return;
@@ -264,43 +245,25 @@
       toast.className = `${bgColors[type] || bgColors.info} text-xs font-medium px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 opacity-0 translate-y-2 pointer-events-auto`;
       toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${escapeHtml(message)}</span>`;
       container.appendChild(toast);
-      
-      requestAnimationFrame(() => {
-        toast.classList.remove('opacity-0', 'translate-y-2');
-      });
-
+      requestAnimationFrame(() => toast.classList.remove('opacity-0', 'translate-y-2'));
       setTimeout(() => {
         toast.classList.add('opacity-0', 'translate-y-2');
         setTimeout(() => toast.remove(), 300);
       }, 3000);
-    }
+    };
 
-    // Helper: HTML Escape
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, (m) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
-    }
-
-    // Initialize Firebase
     async function initFirebase() {
       try {
-        if (!validateFirebaseConfig(firebaseConfig)) {
-          throw new Error("Firebase 설정값이 입력되지 않았습니다. index.html의 firebaseConfig를 수정하세요.");
-        }
+        if (!validateFirebaseConfig(firebaseConfig)) throw new Error("Firebase 설정값을 확인하세요.");
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         auth = getAuth(app);
-
-        // Anonymous auth for zero login barrier
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
           await signInWithCustomToken(auth, __initial_auth_token);
         } else {
           await signInAnonymously(auth);
         }
-
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, user => {
           if (user) {
             currentUser = user;
             updateSyncStatus(true, "실시간 동기화 연결됨");
@@ -313,14 +276,12 @@
         console.error("Firebase initialization failed:", err);
         updateSyncStatus(false, "Firebase 연결 실패");
         const container = document.getElementById('handover-list');
-        if (container) {
-          container.innerHTML = `
-            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center border border-amber-300 dark:border-amber-700">
-              <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-500 mb-3"></i>
-              <p class="font-bold mb-2">실시간 데이터베이스에 연결할 수 없습니다.</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400">Firebase 설정값과 익명 인증, Firestore 보안 규칙을 확인해 주세요.</p>
-            </div>`;
-        }
+        if (container) container.innerHTML = `
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 text-center border border-amber-300 dark:border-amber-700">
+            <i class="fa-solid fa-triangle-exclamation text-3xl text-amber-500 mb-3"></i>
+            <p class="font-bold mb-2">실시간 데이터베이스에 연결할 수 없습니다.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Firebase 설정값, 익명 인증, Firestore 보안 규칙을 확인해 주세요.</p>
+          </div>`;
         window.showToast("Firebase 설정 또는 연결 상태를 확인해 주세요.", "error");
       }
     }
@@ -328,90 +289,147 @@
     function updateSyncStatus(isOnline, text) {
       const indicator = document.getElementById('sync-indicator');
       const textElem = document.getElementById('sync-text');
-      if (indicator && textElem) {
-        textElem.innerText = text;
-        if (isOnline) {
-          indicator.className = "inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        } else {
-          indicator.className = "inline-block w-2 h-2 rounded-full bg-amber-500";
-        }
-      }
+      if (!indicator || !textElem) return;
+      textElem.innerText = text;
+      indicator.className = isOnline
+        ? "inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+        : "inline-block w-2 h-2 rounded-full bg-amber-500";
     }
 
-    // Subscribe to Firestore Public Data (RULE 1)
     function subscribeToHandoverData() {
       if (!db || !currentUser) return;
-
       const publicCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'handovers');
-
-      onSnapshot(publicCollectionRef, (snapshot) => {
+      onSnapshot(publicCollectionRef, snapshot => {
         const items = [];
-        snapshot.forEach((docSnap) => {
-          items.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        
-        // Sorting in memory (RULE 2)
+        snapshot.forEach(docSnap => items.push({ id: docSnap.id, ...docSnap.data() }));
         items.sort((a, b) => {
           const tA = a.createdAt?.seconds || a.createdAt || 0;
           const tB = b.createdAt?.seconds || b.createdAt || 0;
           return tB - tA;
         });
-
         handoverLogs = items;
         renderDashboard();
-      }, (error) => {
+      }, error => {
         console.error("Firestore listener error:", error);
         updateSyncStatus(false, "데이터 접근 오류");
         window.showToast("데이터를 불러오지 못했습니다. Firestore 보안 규칙을 확인해 주세요.", "error");
       });
     }
 
-    // Fallback Local Storage
-    const STORAGE_KEY = 'shift_handover_items_v2';
-    function loadLocalFallbackData() {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          handoverLogs = JSON.parse(stored);
-        } catch(e) {
-          handoverLogs = [];
-        }
-      } else {
-        handoverLogs = [
-          {
-            id: '1700000000001',
-            shift: 'A조',
-            author: '홍길동',
-            memo: 'A조 특이사항: 라인 1번 압력 밸브 점검 완료. 정상 수치 유지 중.',
-            completed: false,
-            createdAt: Math.floor(Date.now() / 1000)
-          },
-          {
-            id: '1700000000002',
-            shift: 'B조',
-            author: '김철수',
-            memo: 'B조 전달사항: 2번 컨베이어 벨트 소음 발생하여 정비 팀 요청 완료.',
-            completed: true,
-            createdAt: Math.floor(Date.now() / 1000) - 3600
-          }
-        ];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(handoverLogs));
+    function updatePreview() {
+      previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+      previewObjectUrls = [];
+      const container = document.getElementById('attachment-preview');
+      if (!container) return;
+      const existingHtml = existingAttachments.map((item, index) => {
+        const url = escapeHtml(item.url || '');
+        const isVideo = item.type === 'video';
+        return `<div class="media-preview-card">
+          ${isVideo
+            ? `<video src="${url}" class="media-thumb rounded-lg bg-black" controls playsinline></video>`
+            : `<img src="${url}" class="media-thumb rounded-lg border border-slate-200 dark:border-slate-700" alt="첨부 사진">`}
+          <button type="button" class="media-remove" data-remove-existing="${index}" aria-label="첨부 제거"><i class="fa-solid fa-xmark"></i></button>
+          <span class="block text-[10px] text-slate-500 mt-1">${isVideo ? '기존 영상' : '기존 사진'}</span>
+        </div>`;
+      }).join('');
+
+      const newHtml = selectedFiles.map((file, index) => {
+        const url = URL.createObjectURL(file);
+        previewObjectUrls.push(url);
+        const isVideo = file.type.startsWith('video/');
+        return `<div class="media-preview-card">
+          ${isVideo
+            ? `<video src="${url}" class="media-thumb rounded-lg bg-black" controls playsinline></video>`
+            : `<img src="${url}" class="media-thumb rounded-lg border border-slate-200 dark:border-slate-700" alt="선택한 사진">`}
+          <button type="button" class="media-remove" data-remove-new="${index}" aria-label="첨부 제거"><i class="fa-solid fa-xmark"></i></button>
+          <span class="block text-[10px] text-slate-500 mt-1">${isVideo ? '새 영상' : '새 사진'}</span>
+        </div>`;
+      }).join('');
+      container.innerHTML = existingHtml + newHtml;
+      const countImages = existingAttachments.filter(x => x.type !== 'video').length + selectedFiles.filter(x => x.type.startsWith('image/')).length;
+      const countVideos = existingAttachments.filter(x => x.type === 'video').length + selectedFiles.filter(x => x.type.startsWith('video/')).length;
+      document.getElementById('upload-status').textContent = `첨부됨: 사진 ${countImages}/${MAX_IMAGES}장 · 영상 ${countVideos}/1개`;
+    }
+
+    function resetAttachments() {
+      previewObjectUrls.forEach(url => URL.revokeObjectURL(url));
+      previewObjectUrls = [];
+      selectedFiles = [];
+      existingAttachments = [];
+      document.getElementById('image-input').value = '';
+      document.getElementById('video-input').value = '';
+      document.getElementById('upload-status').textContent = '';
+      updatePreview();
+    }
+
+    async function getVideoDuration(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+          const duration = video.duration;
+          URL.revokeObjectURL(url);
+          resolve(duration);
+        };
+        video.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error("영상 길이를 확인할 수 없습니다."));
+        };
+        video.src = url;
+      });
+    }
+
+    function validateAttachmentCounts() {
+      const images = existingAttachments.filter(x => x.type !== 'video').length + selectedFiles.filter(x => x.type.startsWith('image/')).length;
+      const videos = existingAttachments.filter(x => x.type === 'video').length + selectedFiles.filter(x => x.type.startsWith('video/')).length;
+      if (images > MAX_IMAGES) throw new Error(`사진은 최대 ${MAX_IMAGES}장까지 첨부할 수 있습니다.`);
+      if (videos > 1) throw new Error("영상은 1개만 첨부할 수 있습니다.");
+    }
+
+    async function uploadToCloudinary(file) {
+      const isVideo = file.type.startsWith('video/');
+      const resourceType = isVideo ? 'video' : 'image';
+      const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'worklog');
+
+      const response = await fetch(endpoint, { method: 'POST', body: formData });
+      const result = await response.json();
+      if (!response.ok) {
+        console.error("Cloudinary upload error:", result);
+        throw new Error(result.error?.message || "Cloudinary 업로드에 실패했습니다.");
       }
-      renderDashboard();
+      return {
+        type: isVideo ? 'video' : 'image',
+        url: result.secure_url,
+        publicId: result.public_id,
+        format: result.format,
+        bytes: result.bytes,
+        name: file.name
+      };
     }
 
-    function saveLocalFallback(items) {
-      handoverLogs = items;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-      renderDashboard();
+    function renderAttachmentGallery(attachments) {
+      if (!Array.isArray(attachments) || !attachments.length) return '';
+      return `<div class="mt-3 flex flex-wrap gap-2">${attachments.map(item => {
+        const url = escapeHtml(item.url || '');
+        if (!url) return '';
+        return item.type === 'video'
+          ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="block w-full max-w-xs">
+               <video src="${url}" controls playsinline preload="metadata" class="w-full max-h-64 rounded-xl bg-black"></video>
+               <span class="text-xs text-brand-500 mt-1 inline-block"><i class="fa-solid fa-video mr-1"></i>영상 보기</span>
+             </a>`
+          : `<a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" loading="lazy" alt="첨부 사진" class="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-xl border border-slate-200 dark:border-slate-700"></a>`;
+      }).join('')}</div>`;
     }
 
-    // Tab Switching
     window.switchTab = function(tab) {
       currentTab = tab;
       const tabPending = document.getElementById('tab-pending');
       const tabCompleted = document.getElementById('tab-completed');
-
       if (tab === 'pending') {
         tabPending.className = "flex-1 py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer bg-brand-600 text-white shadow-sm min-h-[48px]";
         tabCompleted.className = "flex-1 py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 min-h-[48px]";
@@ -420,17 +438,14 @@
         tabPending.className = "flex-1 py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 min-h-[48px]";
       }
       renderDashboard();
-    }
+    };
 
-    // Toggle Completion Status
     window.toggleCompletion = async function(id, e) {
       if (e) e.stopPropagation();
       const targetIdStr = String(id);
       const item = handoverLogs.find(l => String(l.id) === targetIdStr);
       if (!item) return;
-
       const newCompleted = !item.completed;
-
       if (db && currentUser) {
         try {
           const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'handovers', targetIdStr);
@@ -440,110 +455,60 @@
           console.error("Update error:", err);
           window.showToast("상태 변경 실패", "error");
         }
-      } else {
-        item.completed = newCompleted;
-        saveLocalFallback(handoverLogs);
-        window.showToast(newCompleted ? "조치완료사항으로 이동되었습니다." : "인수인계사항으로 이동되었습니다.", "success");
       }
-    }
+    };
 
-    // Modal Edit Operation
     window.editLog = function(id, e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      const targetIdStr = String(id);
-      const item = handoverLogs.find(l => String(l.id) === targetIdStr);
-      if (item) {
-        openEditorModal(item);
-      } else {
-        window.showToast("수정할 대상을 찾을 수 없습니다.", "error");
-      }
-    }
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      const item = handoverLogs.find(l => String(l.id) === String(id));
+      if (item) openEditorModal(item);
+      else window.showToast("수정할 대상을 찾을 수 없습니다.", "error");
+    };
 
-    // Modal Delete Operation (EXCLUSIVELY INSIDE MODAL)
     window.handleModalDelete = async function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      const docIdInput = document.getElementById('edit-doc-id');
-      if (!docIdInput) return;
-
-      const targetId = String(docIdInput.value || '').trim();
-      if (!targetId) {
-        window.showToast("삭제할 항목이 지정되지 않았습니다.", "error");
-        return;
-      }
-
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      const targetId = String(document.getElementById('edit-doc-id').value || '').trim();
+      if (!targetId) return window.showToast("삭제할 항목이 지정되지 않았습니다.", "error");
       if (db && currentUser) {
         try {
-          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'handovers', targetId);
-          await deleteDoc(docRef);
+          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'handovers', targetId));
           closeEditorModal();
           window.showToast("성공적으로 삭제되었습니다.", "success");
         } catch (err) {
           console.error("Delete error:", err);
           window.showToast("삭제 중 오류가 발생했습니다.", "error");
         }
-      } else {
-        const filtered = handoverLogs.filter(item => String(item.id) !== targetId);
-        saveLocalFallback(filtered);
-        closeEditorModal();
-        window.showToast("성공적으로 삭제되었습니다.", "success");
       }
-    }
+    };
 
-    // Render Dashboard UI
     function renderDashboard() {
-      const searchInput = document.getElementById('search-input');
-      const shiftSelect = document.getElementById('filter-shift');
-      
-      const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
-      const shiftVal = shiftSelect ? shiftSelect.value : 'all';
-
+      const searchVal = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+      const shiftVal = document.getElementById('filter-shift')?.value || 'all';
       const pendingItems = handoverLogs.filter(l => !l.completed);
       const completedItems = handoverLogs.filter(l => !!l.completed);
-
-      const pendingBadge = document.getElementById('badge-pending-count');
-      const completedBadge = document.getElementById('badge-completed-count');
-      if (pendingBadge) pendingBadge.innerText = pendingItems.length;
-      if (completedBadge) completedBadge.innerText = completedItems.length;
-
+      document.getElementById('badge-pending-count').innerText = pendingItems.length;
+      document.getElementById('badge-completed-count').innerText = completedItems.length;
       const targetList = currentTab === 'pending' ? pendingItems : completedItems;
-
       const filtered = targetList.filter(log => {
-        const matchSearch = !searchVal || 
+        const matchSearch = !searchVal ||
           (log.author && log.author.toLowerCase().includes(searchVal)) ||
           (log.memo && log.memo.toLowerCase().includes(searchVal));
-
-        const matchShift = shiftVal === 'all' || log.shift === shiftVal;
-        return matchSearch && matchShift;
+        return matchSearch && (shiftVal === 'all' || log.shift === shiftVal);
       });
-
       const container = document.getElementById('handover-list');
       if (!container) return;
-
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-700">
-            <i class="fa-regular fa-folder-open text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
-            <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">
-              ${currentTab === 'pending' ? '등록된 인수인계 사항이 없습니다.' : '조치 완료된 항목이 없습니다.'}
-            </p>
-          </div>
-        `;
+      if (!filtered.length) {
+        container.innerHTML = `<div class="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-700">
+          <i class="fa-regular fa-folder-open text-4xl text-slate-300 dark:text-slate-600 mb-3"></i>
+          <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">${currentTab === 'pending' ? '등록된 인수인계 사항이 없습니다.' : '조치 완료된 항목이 없습니다.'}</p>
+        </div>`;
         return;
       }
-
-      container.innerHTML = filtered.map(log => renderHandoverCard(log)).join('');
+      container.innerHTML = filtered.map(renderHandoverCard).join('');
     }
 
     function renderHandoverCard(log) {
       const shiftTimeText = log.shift === 'A조' ? '07:00 ~ 15:40' : '15:40 ~ 01:20';
-      
       let dateStr = '방금 전';
       if (log.createdAt) {
         const seconds = log.createdAt.seconds || log.createdAt;
@@ -551,178 +516,204 @@
           month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
       }
-
-      const isChecked = !!log.completed;
       const safeId = escapeHtml(String(log.id));
-
-      return `
-        <article class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-5 transition hover:shadow-md">
-          <div class="flex justify-between items-start gap-2 mb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="px-2.5 py-1 bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-bold rounded-lg">
-                ${escapeHtml(log.shift)} (${shiftTimeText})
-              </span>
-              <span class="text-xs text-slate-400 flex items-center gap-1">
-                <i class="fa-regular fa-clock"></i> ${dateStr}
-              </span>
-            </div>
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="window.editLog('${safeId}', event)" class="text-slate-400 hover:text-brand-500 active:text-brand-600 p-3 rounded-xl transition cursor-pointer text-lg min-w-[44px] min-h-[44px] flex items-center justify-center" title="수정">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
-            </div>
+      return `<article class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-5 transition hover:shadow-md">
+        <div class="flex justify-between items-start gap-2 mb-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-1 bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-bold rounded-lg">${escapeHtml(log.shift)} (${shiftTimeText})</span>
+            <span class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${dateStr}</span>
           </div>
-
-          <div class="flex items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-xs sm:text-sm mb-3 border border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-2">
-              <span class="text-slate-400 text-xs font-normal">작성자:</span>
-              <span class="text-slate-900 dark:text-white font-bold">${escapeHtml(log.author)}</span>
-            </div>
-            <label class="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95 transition min-h-[44px]">
-              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="window.toggleCompletion('${safeId}', event)" class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
-              <span class="text-xs font-bold ${isChecked ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}">
-                ✅ 조치 완료
-              </span>
-            </label>
-          </div>
-
-          <div class="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
-            ${escapeHtml(log.memo)}
-          </div>
-        </article>
-      `;
+          <button type="button" onclick="window.editLog('${safeId}', event)" class="text-slate-400 hover:text-brand-500 active:text-brand-600 p-3 rounded-xl transition cursor-pointer text-lg min-w-[44px] min-h-[44px] flex items-center justify-center" title="수정">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+        </div>
+        <div class="flex items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 text-xs sm:text-sm mb-3 border border-slate-100 dark:border-slate-800">
+          <div class="flex items-center gap-2"><span class="text-slate-400 text-xs font-normal">작성자:</span><span class="text-slate-900 dark:text-white font-bold">${escapeHtml(log.author)}</span></div>
+          <label class="flex items-center gap-2 cursor-pointer bg-white dark:bg-slate-800 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95 transition min-h-[44px]">
+            <input type="checkbox" ${log.completed ? 'checked' : ''} onchange="window.toggleCompletion('${safeId}', event)" class="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+            <span class="text-xs font-bold ${log.completed ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-slate-300'}">✅ 조치 완료</span>
+          </label>
+        </div>
+        <div class="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">${escapeHtml(log.memo)}</div>
+        ${renderAttachmentGallery(log.attachments)}
+      </article>`;
     }
 
-    // Editor Modal Handling
     window.openEditorModal = function(logToEdit = null) {
       const form = document.getElementById('handover-form');
-      if (form) form.reset();
-
+      form.reset();
+      resetAttachments();
       const modalDeleteBtn = document.getElementById('btn-modal-delete');
-
       if (logToEdit) {
-        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-500"></i> <span>인수인계 수정</span>`;
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-500"></i><span>인수인계 수정</span>`;
         document.getElementById('edit-doc-id').value = String(logToEdit.id);
         document.getElementById('form-shift').value = logToEdit.shift || 'A조';
         document.getElementById('form-author').value = logToEdit.author || '';
         document.getElementById('form-memo').value = logToEdit.memo || '';
-
-        if (modalDeleteBtn) {
-          modalDeleteBtn.classList.remove('hidden');
-          modalDeleteBtn.style.display = 'flex';
-        }
+        existingAttachments = Array.isArray(logToEdit.attachments) ? [...logToEdit.attachments] : [];
+        modalDeleteBtn.classList.remove('hidden');
+        modalDeleteBtn.style.display = 'flex';
       } else {
-        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-plus text-brand-500"></i> <span>새 인수인계 작성</span>`;
+        document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-plus text-brand-500"></i><span>새 인수인계 작성</span>`;
         document.getElementById('edit-doc-id').value = '';
-        if (modalDeleteBtn) {
-          modalDeleteBtn.classList.add('hidden');
-          modalDeleteBtn.style.display = 'none';
-        }
+        modalDeleteBtn.classList.add('hidden');
+        modalDeleteBtn.style.display = 'none';
       }
-
+      updatePreview();
       document.getElementById('modal-editor').classList.remove('hidden');
-    }
+    };
 
     window.closeEditorModal = function() {
       document.getElementById('modal-editor').classList.add('hidden');
-    }
+      resetAttachments();
+    };
 
-    // Form Submit (Add / Edit)
     async function handleFormSubmit(e) {
       e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-form');
+      const status = document.getElementById('upload-status');
+      if (!db || !currentUser) {
+        window.showToast("Firebase 연결 후 저장할 수 있습니다.", "error");
+        return;
+      }
       const docId = document.getElementById('edit-doc-id').value;
       const shift = document.getElementById('form-shift').value;
       const author = document.getElementById('form-author').value.trim();
       const memo = document.getElementById('form-memo').value.trim();
 
-      if (db && currentUser) {
-        try {
-          if (docId) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'handovers', String(docId));
-            await updateDoc(docRef, { shift, author, memo });
-          } else {
-            const publicCol = collection(db, 'artifacts', appId, 'public', 'data', 'handovers');
-            await addDoc(publicCol, {
-              shift,
-              author,
-              memo,
-              completed: false,
-              createdAt: Math.floor(Date.now() / 1000)
-            });
+      try {
+        validateAttachmentCounts();
+        for (const file of selectedFiles) {
+          if (file.type.startsWith('image/') && file.size > MAX_IMAGE_BYTES) {
+            throw new Error(`사진은 장당 ${MAX_IMAGE_BYTES / 1024 / 1024}MB 이하만 첨부할 수 있습니다.`);
           }
-          closeEditorModal();
-          window.showToast("인수인계 내역이 저장되었습니다.", "success");
-        } catch (err) {
-          console.error("Save error:", err);
-          window.showToast("저장 중 오류가 발생했습니다.", "error");
+          if (file.type.startsWith('video/')) {
+            if (file.size > MAX_VIDEO_BYTES) throw new Error("영상은 25MB 이하만 첨부할 수 있습니다.");
+            const duration = await getVideoDuration(file);
+            if (!Number.isFinite(duration) || duration > MAX_VIDEO_SECONDS) {
+              throw new Error("영상은 30초 이내만 첨부할 수 있습니다.");
+            }
+          }
         }
-      } else {
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('opacity-60');
+        const uploaded = [];
+        for (let i = 0; i < selectedFiles.length; i++) {
+          status.textContent = `파일 업로드 중... (${i + 1}/${selectedFiles.length})`;
+          uploaded.push(await uploadToCloudinary(selectedFiles[i]));
+        }
+        const attachments = [...existingAttachments, ...uploaded];
+        status.textContent = "인수인계 내용을 저장하고 있습니다...";
+        const payload = { shift, author, memo, attachments };
+
         if (docId) {
-          const docIdStr = String(docId);
-          const idx = handoverLogs.findIndex(l => String(l.id) === docIdStr);
-          if (idx !== -1) {
-            handoverLogs[idx] = { ...handoverLogs[idx], shift, author, memo };
-          }
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'handovers', String(docId));
+          await updateDoc(docRef, payload);
         } else {
-          handoverLogs.unshift({
-            id: String(Date.now()),
-            shift,
-            author,
-            memo,
-            completed: false,
-            createdAt: Math.floor(Date.now() / 1000)
+          const publicCol = collection(db, 'artifacts', appId, 'public', 'data', 'handovers');
+          await addDoc(publicCol, {
+            ...payload, completed: false, createdAt: Math.floor(Date.now() / 1000)
           });
         }
-        saveLocalFallback(handoverLogs);
         closeEditorModal();
         window.showToast("인수인계 내역이 저장되었습니다.", "success");
+      } catch (err) {
+        console.error("Save/upload error:", err);
+        window.showToast(err.message || "저장 중 오류가 발생했습니다.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-60');
+        if (status) status.textContent = '';
       }
     }
 
-    // QR Share Modal
+    function addSelectedFiles(files, kind) {
+      const incoming = Array.from(files || []);
+      if (!incoming.length) return;
+      if (kind === 'image') {
+        const currentCount = existingAttachments.filter(x => x.type !== 'video').length + selectedFiles.filter(x => x.type.startsWith('image/')).length;
+        const valid = incoming.filter(file => {
+          if (!file.type.startsWith('image/')) {
+            window.showToast("이미지 파일만 선택해 주세요.", "error");
+            return false;
+          }
+          if (file.size > MAX_IMAGE_BYTES) {
+            window.showToast("사진은 장당 8MB 이하만 첨부할 수 있습니다.", "error");
+            return false;
+          }
+          return true;
+        });
+        const room = Math.max(0, MAX_IMAGES - currentCount);
+        selectedFiles.push(...valid.slice(0, room));
+        if (valid.length > room) window.showToast("사진은 최대 5장까지 첨부할 수 있습니다.", "error");
+      } else {
+        const alreadyHasVideo = existingAttachments.some(x => x.type === 'video') || selectedFiles.some(x => x.type.startsWith('video/'));
+        const file = incoming[0];
+        if (alreadyHasVideo) window.showToast("영상은 1개만 첨부할 수 있습니다. 기존 영상을 먼저 제거해 주세요.", "error");
+        else if (!file.type.startsWith('video/')) window.showToast("동영상 파일을 선택해 주세요.", "error");
+        else if (file.size > MAX_VIDEO_BYTES) window.showToast("영상은 25MB 이하만 첨부할 수 있습니다.", "error");
+        else selectedFiles.push(file);
+      }
+      updatePreview();
+    }
+
     function openQrModal() {
       const currentUrl = window.location.href;
       document.getElementById('qr-code-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
       document.getElementById('modal-qr').classList.remove('hidden');
     }
-
-    function closeQrModal() {
-      document.getElementById('modal-qr').classList.add('hidden');
+    function closeQrModal() { document.getElementById('modal-qr').classList.add('hidden'); }
+    async function copyLink() {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        window.showToast("접속 링크가 복사되었습니다!", "success");
+      } catch {
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = window.location.href;
+        dummy.select();
+        document.execCommand('copy');
+        dummy.remove();
+        window.showToast("접속 링크가 복사되었습니다!", "success");
+      }
     }
 
-    function copyLink() {
-      const dummy = document.createElement('input');
-      document.body.appendChild(dummy);
-      dummy.value = window.location.href;
-      dummy.select();
-      document.execCommand('copy');
-      document.body.removeChild(dummy);
-      window.showToast("접속 링크가 복사되었습니다!", "success");
-    }
-
-    // Attach DOM Events
     document.addEventListener('DOMContentLoaded', () => {
       initFirebase();
-
       document.getElementById('tab-pending').addEventListener('click', () => window.switchTab('pending'));
       document.getElementById('tab-completed').addEventListener('click', () => window.switchTab('completed'));
       document.getElementById('btn-add-new').addEventListener('click', () => window.openEditorModal());
       document.getElementById('btn-close-modal').addEventListener('click', window.closeEditorModal);
       document.getElementById('btn-cancel-modal').addEventListener('click', window.closeEditorModal);
-      
-      const modalDeleteBtn = document.getElementById('btn-modal-delete');
-      if (modalDeleteBtn) {
-        modalDeleteBtn.addEventListener('click', window.handleModalDelete);
-      }
-      
+      document.getElementById('btn-modal-delete').addEventListener('click', window.handleModalDelete);
       document.getElementById('handover-form').addEventListener('submit', handleFormSubmit);
-
       document.getElementById('search-input').addEventListener('input', renderDashboard);
       document.getElementById('filter-shift').addEventListener('change', renderDashboard);
-
       document.getElementById('btn-qr').addEventListener('click', openQrModal);
       document.getElementById('btn-close-qr').addEventListener('click', closeQrModal);
       document.getElementById('btn-copy-link').addEventListener('click', copyLink);
+      document.getElementById('btn-add-images').addEventListener('click', () => document.getElementById('image-input').click());
+      document.getElementById('btn-add-video').addEventListener('click', () => document.getElementById('video-input').click());
+      document.getElementById('image-input').addEventListener('change', e => {
+        addSelectedFiles(e.target.files, 'image');
+        e.target.value = '';
+      });
+      document.getElementById('video-input').addEventListener('change', e => {
+        addSelectedFiles(e.target.files, 'video');
+        e.target.value = '';
+      });
+      document.getElementById('attachment-preview').addEventListener('click', e => {
+        const removeExisting = e.target.closest('[data-remove-existing]');
+        const removeNew = e.target.closest('[data-remove-new]');
+        if (removeExisting) {
+          existingAttachments.splice(Number(removeExisting.dataset.removeExisting), 1);
+          updatePreview();
+        } else if (removeNew) {
+          selectedFiles.splice(Number(removeNew.dataset.removeNew), 1);
+          updatePreview();
+        }
+      });
     });
   </script>
 </body>

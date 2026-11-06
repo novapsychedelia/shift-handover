@@ -32,28 +32,32 @@
       border-radius: 9999px; background: rgba(15,23,42,.88); color: white;
       display: flex; align-items: center; justify-content: center;
     }
-    /* iPhone/iPad: keep the editor and its Save button reachable when attachments expand. */
+    /* iPhone/iPad: scroll the whole editor overlay so the Save row is reachable below attachments. */
     #modal-editor {
       align-items: flex-start;
+      justify-content: center;
+      overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
+      padding-top: max(12px, env(safe-area-inset-top));
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
     #modal-editor > div {
       box-sizing: border-box;
-      max-height: calc(100vh - 24px);
-      max-height: calc(100dvh - 24px);
+      width: 100%;
+      max-height: none;
       min-height: 0;
-      margin-top: max(12px, env(safe-area-inset-top));
-      margin-bottom: max(12px, env(safe-area-inset-bottom));
-      flex-shrink: 0;
+      height: auto;
+      margin: 0 auto;
+      flex: 0 0 auto;
     }
     #handover-form {
       min-height: 0;
-      flex: 1 1 0%;
-      overflow-y: auto;
-      overscroll-behavior-y: contain;
-      -webkit-overflow-scrolling: touch;
+      flex: 0 0 auto;
+      overflow: visible;
+      overscroll-behavior-y: auto;
+      -webkit-overflow-scrolling: auto;
       touch-action: pan-y;
       padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     }
@@ -233,7 +237,7 @@
     let previewObjectUrls = [];
 
     const firebaseConfig = {
-      apiKey: "AIzaSyASjCDtchaPqZhnk1mAsmUkSUBQ9Ik3w6",
+      apiKey: "AIzaSyASjCDtchaPqZhnk1AsmUkSUBQ9Ik3w6Y",
       authDomain: "proto-beta1.firebaseapp.com",
       projectId: "proto-beta1",
       storageBucket: "proto-beta1.firebasestorage.app",
@@ -608,7 +612,9 @@
         modalDeleteBtn.style.display = 'none';
       }
       updatePreview();
-      document.getElementById('modal-editor').classList.remove('hidden');
+      const editorOverlay = document.getElementById('modal-editor');
+      editorOverlay.classList.remove('hidden');
+      editorOverlay.scrollTop = 0;
     };
 
     window.closeEditorModal = function() {

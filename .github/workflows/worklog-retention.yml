@@ -1,0 +1,51 @@
+name: WorkLog quarterly backup and retention
+
+on:
+  schedule:
+    # Quarterly: 03:17 KST on Jan 1, Apr 1, Jul 1, Oct 1 (UTC 18:17 previous day)
+    - cron: "17 18 31 12,3,6,9 *"
+  workflow_dispatch:
+    inputs:
+      enable_delete:
+        description: "Permanently delete eligible completed records and Cloudinary media after verified backup"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worklog-retention
+  cancel-in-progress: false
+
+jobs:
+  backup-and-retention:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run backup and retention
+        env:
+          FIREBASE_PROJECT_ID: proto-beta1
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          ENABLE_PERMANENT_DELETE: ${{ github.event_name == 'workflow_dispatch' && inputs.enable_delete || vars.WORKLOG_ENABLE_DELETE == 'true' }}
+        run: npm run retention
+      - name: Save run report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worklog-retention-report-${{ github.run_id }}
+          path: worklog-retention-report.json
+          if-no-files-found: ignore
+          retention-days: 90

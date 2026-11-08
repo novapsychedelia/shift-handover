@@ -32,32 +32,28 @@
       border-radius: 9999px; background: rgba(15,23,42,.88); color: white;
       display: flex; align-items: center; justify-content: center;
     }
-    /* iPhone/iPad: scroll the whole editor overlay so the Save row is reachable below attachments. */
+    /* iPhone/iPad: keep the editor and its Save button reachable when attachments expand. */
     #modal-editor {
       align-items: flex-start;
-      justify-content: center;
-      overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
-      padding-top: max(12px, env(safe-area-inset-top));
-      padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
     #modal-editor > div {
       box-sizing: border-box;
-      width: 100%;
-      max-height: none;
+      max-height: calc(100vh - 24px);
+      max-height: calc(100dvh - 24px);
       min-height: 0;
-      height: auto;
-      margin: 0 auto;
-      flex: 0 0 auto;
+      margin-top: max(12px, env(safe-area-inset-top));
+      margin-bottom: max(12px, env(safe-area-inset-bottom));
+      flex-shrink: 0;
     }
     #handover-form {
       min-height: 0;
-      flex: 0 0 auto;
-      overflow: visible;
-      overscroll-behavior-y: auto;
-      -webkit-overflow-scrolling: auto;
+      flex: 1 1 0%;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
     }
@@ -106,7 +102,13 @@
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input type="text" id="search-input" placeholder="작성자 또는 내용 검색..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 transition">
       </div>
-      <div class="flex gap-2">
+      <div class="flex flex-col sm:flex-row gap-2">
+        <select id="filter-line" aria-label="라인 필터" class="px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer">
+          <option value="all">전체 라인</option>
+          <option value="3-2라인">🟣 3-2라인</option>
+          <option value="3-3라인">🟠 3-3라인</option>
+          <option value="미분류">미분류</option>
+        </select>
         <select id="filter-shift" class="px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer">
           <option value="all">전체 근무조</option>
           <option value="A조">☀️ A조 (07:00 ~ 15:40)</option>
@@ -138,6 +140,15 @@
 
       <form id="handover-form" class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-grow">
         <input type="hidden" id="edit-doc-id">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">인수인계 라인 *</label>
+          <select id="form-line" required class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 cursor-pointer">
+            <option value="" selected disabled>라인을 선택하세요</option>
+            <option value="3-2라인">🟣 3-2라인</option>
+            <option value="3-3라인">🟠 3-3라인</option>
+            <option value="미분류">미분류 (기존 기록용)</option>
+          </select>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">근무 시간대 *</label>
@@ -536,6 +547,7 @@
     function renderDashboard() {
       const searchVal = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
       const shiftVal = document.getElementById('filter-shift')?.value || 'all';
+      const lineVal = document.getElementById('filter-line')?.value || 'all';
       const pendingItems = handoverLogs.filter(l => !l.completed);
       const completedItems = handoverLogs.filter(l => !!l.completed);
       document.getElementById('badge-pending-count').innerText = pendingItems.length;
@@ -545,7 +557,9 @@
         const matchSearch = !searchVal ||
           (log.author && log.author.toLowerCase().includes(searchVal)) ||
           (log.memo && log.memo.toLowerCase().includes(searchVal));
-        return matchSearch && (shiftVal === 'all' || log.shift === shiftVal);
+        const logLine = log.line || '미분류';
+        const matchLine = lineVal === 'all' || logLine === lineVal;
+        return matchSearch && matchLine && (shiftVal === 'all' || log.shift === shiftVal);
       });
       const container = document.getElementById('handover-list');
       if (!container) return;
@@ -569,9 +583,16 @@
         });
       }
       const safeId = escapeHtml(String(log.id));
-      return `<article class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-5 transition hover:shadow-md">
+      const line = log.line || '미분류';
+      const lineStyles = line === '3-2라인'
+        ? { border: '#8B5CF6', bg: '#F1EAFE', text: '#6D28D9' }
+        : line === '3-3라인'
+          ? { border: '#F97316', bg: '#FFF0E5', text: '#C2410C' }
+          : { border: '#94A3B8', bg: '#F1F5F9', text: '#475569' };
+      return `<article style="border-left: 5px solid ${lineStyles.border};" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 sm:p-5 transition hover:shadow-md">
         <div class="flex justify-between items-start gap-2 mb-3">
           <div class="flex items-center gap-2 flex-wrap">
+            <span style="background:${lineStyles.bg};color:${lineStyles.text};" class="px-2.5 py-1 text-xs font-extrabold rounded-lg">${escapeHtml(line)}</span>
             <span class="px-2.5 py-1 bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 text-xs font-bold rounded-lg">${escapeHtml(log.shift)} (${shiftTimeText})</span>
             <span class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${dateStr}</span>
           </div>
@@ -599,6 +620,7 @@
       if (logToEdit) {
         document.getElementById('modal-title').innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-500"></i><span>인수인계 수정</span>`;
         document.getElementById('edit-doc-id').value = String(logToEdit.id);
+        document.getElementById('form-line').value = logToEdit.line || '미분류';
         document.getElementById('form-shift').value = logToEdit.shift || 'A조';
         document.getElementById('form-author').value = logToEdit.author || '';
         document.getElementById('form-memo').value = logToEdit.memo || '';
@@ -612,9 +634,7 @@
         modalDeleteBtn.style.display = 'none';
       }
       updatePreview();
-      const editorOverlay = document.getElementById('modal-editor');
-      editorOverlay.classList.remove('hidden');
-      editorOverlay.scrollTop = 0;
+      document.getElementById('modal-editor').classList.remove('hidden');
     };
 
     window.closeEditorModal = function() {
@@ -631,8 +651,13 @@
         return;
       }
       const docId = document.getElementById('edit-doc-id').value;
+      const line = document.getElementById('form-line').value;
       const shift = document.getElementById('form-shift').value;
       const author = document.getElementById('form-author').value.trim();
+      if (!line) {
+        window.showToast("인수인계 라인을 선택해 주세요.", "error");
+        return;
+      }
       const memo = document.getElementById('form-memo').value.trim();
 
       try {
@@ -659,7 +684,7 @@
         }
         const attachments = [...existingAttachments, ...uploaded];
         status.textContent = "인수인계 내용을 저장하고 있습니다...";
-        const payload = { shift, author, memo, attachments };
+        const payload = { line, shift, author, memo, attachments };
 
         if (docId) {
           const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'handovers', String(docId));
@@ -748,6 +773,7 @@
       document.getElementById('btn-modal-delete').addEventListener('click', window.handleModalDelete);
       document.getElementById('handover-form').addEventListener('submit', handleFormSubmit);
       document.getElementById('search-input').addEventListener('input', renderDashboard);
+      document.getElementById('filter-line').addEventListener('change', renderDashboard);
       document.getElementById('filter-shift').addEventListener('change', renderDashboard);
       document.getElementById('btn-qr').addEventListener('click', openQrModal);
       document.getElementById('btn-close-qr').addEventListener('click', closeQrModal);

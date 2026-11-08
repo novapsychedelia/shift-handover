@@ -3,7 +3,7 @@ name: WorkLog quarterly backup and retention
 on:
   schedule:
     # Quarterly: 03:17 KST on Jan 1, Apr 1, Jul 1, Oct 1 (UTC 18:17 previous day)
-    - cron: "17 18 31 12,3,6,9 *"
+    - cron: "17 18 1 1,4,7,10 *"
   workflow_dispatch:
     inputs:
       enable_delete:

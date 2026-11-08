@@ -1,0 +1,12 @@
+{
+  "name": "worklog-retention",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "retention": "node scripts/worklog-retention.mjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "firebase-admin": "^13.5.0"
+  }
+}
